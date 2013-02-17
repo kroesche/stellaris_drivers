@@ -21,6 +21,7 @@
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_timer.h"
+#include "inc/hw_gpio.h"
 
 #include "driverlib/debug.h"
 #include "driverlib/timer.h"
@@ -108,7 +109,7 @@
 /* Define the following if you want debug messages to serial port.
  * Undefine or comment out to disable debug messages.
  */
-#define SERVO_DEBUG_MSGS
+//#define SERVO_DEBUG_MSGS
 
 /* Define the number of servo instances allowed.  It does not make sense for
  * this to be any larger than the number of wide timer halves.
@@ -390,6 +391,7 @@ CalcCentiDegreesFromUsecsAbs(Servo_t *pServo, int32_t usecs)
     return(cdeg);
 }
 
+#if 0 // leave out until needed
 /** @internal
  * Calculate centi-degrees of relative angle from microseconds of pulse width
  *
@@ -420,6 +422,7 @@ CalcCentiDegreesFromUsecsRel(Servo_t *pServo, int32_t usecs)
     
     return(cdeg);
 }
+#endif
 
 /* @internal
  * Handle servo motion each PWM period
@@ -469,14 +472,28 @@ ServoMotionHandler(void *pvServo)
      */
     else if(pServo->targetUsecs > pServo->currentUsecs)
     {
-        pServo->currentUsecs += pServo->rateUsecsPerTick;
+        if((pServo->targetUsecs - pServo->currentUsecs) < pServo->rateUsecsPerTick)
+        {
+            pServo->currentUsecs = pServo->targetUsecs;
+        }
+        else
+        {
+            pServo->currentUsecs += pServo->rateUsecsPerTick;
+        }
     }
     
     /* otherwise the target value is less, so subtract the motion rate
      */
     else
     {
-        pServo->currentUsecs -= pServo->rateUsecsPerTick;
+        if((pServo->currentUsecs - pServo->targetUsecs) < pServo->rateUsecsPerTick)
+        {
+            pServo->currentUsecs = pServo->targetUsecs;
+        }
+        else
+        {
+            pServo->currentUsecs -= pServo->rateUsecsPerTick;
+        }
     }
     
     /* constrain the position to the limits
@@ -755,6 +772,17 @@ ServoConfig(uint32_t timerIdx, uint32_t timerHalf)
                        TIMER_CAPA_EVENT :
                        TIMER_CAPB_EVENT);
     
+    /* If PD7 is used, it must be unlocked.  This is preconfigured as NMI
+     * and cant be changed without a special procedure
+     */
+    if((pTimer->timerGpioBase == GPIO_PORTD_BASE) &&
+       (pTimer->timerPin == GPIO_PIN_7))
+    {
+        DbgPrintf(" unlocking PD7\n", 0);
+        HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = 0x4C4F434B;
+        HWREG(GPIO_PORTD_BASE + GPIO_O_CR) = GPIO_PIN_7;
+    }
+    
     /* now that the timer output can be assured to be low, it is safe to
      * configure the GPIO pin for timer control.  Up to now it has been a
      * GPIO input (assuming no other code has changed it since reset)
@@ -764,6 +792,14 @@ ServoConfig(uint32_t timerIdx, uint32_t timerHalf)
     ROM_GPIOPinConfigure(pTimer->timerPinConfig);
     ROM_GPIOPinTypeTimer(pTimer->timerGpioBase, pTimer->timerPin);
     
+    /* If it was PD7 then relock
+     */
+    if((pTimer->timerGpioBase == GPIO_PORTD_BASE) &&
+       (pTimer->timerPin == GPIO_PIN_7))
+    {
+        HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = 1;
+    }
+
     /* return the handle to the caller
      */
     DbgPrintf("-ServoConfig(), ret handle 0x%08X\n", pServo);
@@ -1078,7 +1114,7 @@ ServoSetPosition(ServoHandle_t hServo, int32_t centiDegrees)
     ret = ServoSetPositionUsecs(hServo, usecs);
     
     DbgPrintf("-ServoSetPosition(), ret (%d)\n", ret);
-    return(0);
+    return(ret);
 }
 
 /**
