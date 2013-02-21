@@ -24,8 +24,6 @@
 #include "driverlib/gpio.h"
 #include "driverlib/ssi.h"
 #include "driverlib/pin_map.h"
-#include "utils/cmdline.h"
-#include "utils/ustdlib.h"
 #include "grlib/grlib.h"
 
 #include "grl_pcd8544_84x48.h"
@@ -61,10 +59,10 @@
  *  Here is code showing how you might use this driver in an example:
  *
  *    // init the driver
- *    PCD8544_84x48_Init(SysCtlClockGet());
+ *    GRL_PCD8544_84x48_Init(SysCtlClockGet());
  *
  *    // init the grlib graphics context
- *    GrContextInit(&context, &g_sNokia);
+ *    GrContextInit(&context, &g_sPCD8544_84x48);
  *
  *    // define rectangle for screen border
  *    rect.sXMin = 0;
@@ -136,7 +134,7 @@ static const uint8_t initCommands[] =
 {
     0x21,   /* select extended instruction set */
     0x14,   /* set bias */
-    0xa8,   /* contrast (Vop) */
+    0xb8,   /* contrast (Vop) */
     0x20,   /* normal instruction set */
     0x0c,   /* normal display mode */
     0x80,   /* X origin 0 */
