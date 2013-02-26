@@ -96,18 +96,18 @@
 
 /* Define the GPIO ports and pins used for the SSI/SPI peripheral
  */
-#define DISPLAY_GPIO_PERIPH     SYSCTL_PERIPH_GPIOB
-#define DISPLAY_PINCFG_SSICLK   GPIO_PB4_SSI2CLK
-#define DISPLAY_PINCFG_SSIFSS   GPIO_PB5_SSI2FSS
-#define DISPLAY_PINCFG_SSITX    GPIO_PB7_SSI2TX
-#define DISPLAY_GPIO_PORT       GPIO_PORTB_BASE
-#define DISPLAY_GPIO_PINS       (GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_7)
-#define DISPLAY_DC_PIN          GPIO_PIN_6
+#define DISPLAY_GPIO_PERIPH     SYSCTL_PERIPH_GPIOA
+#define DISPLAY_PINCFG_SSICLK   GPIO_PA2_SSI0CLK
+#define DISPLAY_PINCFG_SSIFSS   GPIO_PA3_SSI0FSS
+#define DISPLAY_PINCFG_SSITX    GPIO_PA5_SSI0TX
+#define DISPLAY_GPIO_PORT       GPIO_PORTA_BASE
+#define DISPLAY_GPIO_PINS       (GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_5)
+#define DISPLAY_DC_PIN          GPIO_PIN_4
 
 /* Define the SSI/SPI peripheral to use with the display, data rate
  */
-#define DISPLAY_SSI_PERIPH      SYSCTL_PERIPH_SSI2
-#define DISPLAY_SSI_BASE        SSI2_BASE
+#define DISPLAY_SSI_PERIPH      SYSCTL_PERIPH_SSI0
+#define DISPLAY_SSI_BASE        SSI0_BASE
 #define DISPLAY_SSI_RATE        1000000
 
 /******************************************************************************
