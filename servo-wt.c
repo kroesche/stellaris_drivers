@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * servo.c - Servo driver for TI Stellaris microcontroller
+ * servo-wt.c - Servo (wide timer) driver for TI Stellaris microcontroller
  *
  * Copyright (c) 2013, Joseph Kroesche (kroesche.org)
  * All rights reserved.
@@ -13,10 +13,14 @@
  *
  *****************************************************************************/
 
+/* Library headers
+ */
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 
+/* StellarisWare headers
+ */
 #include "inc/hw_types.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
@@ -30,10 +34,12 @@
 #include "driverlib/gpio.h"
 #include "driverlib/rom.h"
 
-#include "servo.h"
+/* Module header
+ */
+#include "servo-wt.h"
 
 /**
- * @defgroup servo_driver Servo Driver
+ * @addtogroup servo_wt_driver Servo Driver for Wide Timers
  *
  * This is a servo driver for TI Stellaris microcontrollers.  Specifically
  * it is for the LM4F parts (such as LM4F120 or LM4F232) because this driver
@@ -83,19 +89,19 @@
  *  Here is code showing how you might use this driver in an example:
  *
  *      // init the driver
- *      err = ServoInit(SysControlClockGet(), 20000); // 50 Hz
+ *      err = Servo_Init(SysControlClockGet(), 20000); // 50 Hz
  *
  *      // get a servo instance using wide timer 4A
- *      handle = ServoConfig(4, SERVO_TIMER_A)
+ *      handle = Servo_Config(4, SERVO_TIMER_A)
  *
  *      // enable the servo (this establishes a known position)
- *      err = ServoEnable(handle);
+ *      err = Servo_Enable(handle);
  *
  *      // set motion rate for 90 deg per sec
- *      err = ServoSetMotionParameters(handle, 90);
+ *      err = Servo_SetMotionParameters(handle, 90);
  *
  *      // command the servo to move to +45 deg
- *      err = ServoMove(handle, 450, NULL, NULL);
+ *      err = Servo_Move(handle, 450, NULL, NULL);
  *
  * @{
  */
@@ -352,7 +358,7 @@ CalcUsecsFromCentiDegreesRel(Servo_t *pServo, int32_t centiDegrees)
     return(usecs);
 }
 
-/** @internal
+/* @internal
  * Calculate centi-degrees of absolute angle from microseconds of pulse width
  *
  * @param[in] pServo is the servo instance
@@ -392,7 +398,7 @@ CalcCentiDegreesFromUsecsAbs(Servo_t *pServo, int32_t usecs)
 }
 
 #if 0 // leave out until needed
-/** @internal
+/* @internal
  * Calculate centi-degrees of relative angle from microseconds of pulse width
  *
  * @param[in] pServo is the servo instance
@@ -434,7 +440,7 @@ CalcCentiDegreesFromUsecsRel(Servo_t *pServo, int32_t usecs)
  * rate (previously configured).
  */
 static void
-ServoMotionHandler(void *pvServo)
+Servo_MotionHandler(void *pvServo)
 {
     Servo_t *pServo = (Servo_t *)pvServo;
     const Timer_t *pTimer = pServo->pTimer;
@@ -566,9 +572,9 @@ WTimerIntHandler(uint32_t timerIdx)
  *          driver is already initialized (-1)
  */
 int
-ServoInit(uint32_t sysClock, uint32_t timerPeriodUsecs)
+Servo_Init(uint32_t sysClock, uint32_t timerPeriodUsecs)
 {
-    DbgPrintf("+ServoInit(sysClock=%u, timerPeriodUsecs=%u)\n",
+    DbgPrintf("+Servo_Init(sysClock=%u, timerPeriodUsecs=%u)\n",
               sysClock, timerPeriodUsecs);
     
     ASSERT(sysClock != 0);
@@ -579,7 +585,7 @@ ServoInit(uint32_t sysClock, uint32_t timerPeriodUsecs)
      */
     if(gCyclesPerUsec || gTimerPeriodUsecs)
     {
-        DbgPrintf(" ServoInit() already initialized, ret (-1)\n", 0);
+        DbgPrintf(" Servo_Init() already initialized, ret (-1)\n", 0);
         return(-1);
     }
     
@@ -589,7 +595,7 @@ ServoInit(uint32_t sysClock, uint32_t timerPeriodUsecs)
     gCyclesPerUsec = sysClock / 1000000;
     gTimerPeriodUsecs = timerPeriodUsecs;
     
-    DbgPrintf("-ServoInit(), ret(0)\n", 0);
+    DbgPrintf("-Servo_Init(), ret(0)\n", 0);
     return(0);
 }
 
@@ -613,13 +619,13 @@ ServoInit(uint32_t sysClock, uint32_t timerPeriodUsecs)
  * available servo instances.
  */
 ServoHandle_t
-ServoConfig(uint32_t timerIdx, uint32_t timerHalf)
+Servo_Config(uint32_t timerIdx, uint32_t timerHalf)
 {
     Servo_t *pServo;
     const Timer_t *pTimer;
     uint32_t servoIdx;
     
-    DbgPrintf("+ServoConfig(timerIdx=%u, timerHalf=%u)\n", timerIdx, timerHalf);
+    DbgPrintf("+Servo_Config(timerIdx=%u, timerHalf=%u)\n", timerIdx, timerHalf);
     
     /* Make sure input parameters are not obviously bad
      */
@@ -689,11 +695,11 @@ ServoConfig(uint32_t timerIdx, uint32_t timerHalf)
     
     /* set some servo default calibration values, and limits
      */
-    ServoCalibrate((ServoHandle_t)pServo, DEFAULT_USECS_PER_90,
-                   DEFAULT_USECS_AT_ZERO,
-                   DEFAULT_REVERSE_ANGLE);
-    ServoSetLimits((ServoHandle_t)pServo, DEFAULT_USECS_MIN, DEFAULT_USECS_MAX);
-    ServoSetMotionParameters((ServoHandle_t)pServo, DEFAULT_RATE);
+    Servo_Calibrate((ServoHandle_t)pServo, DEFAULT_USECS_PER_90,
+                    DEFAULT_USECS_AT_ZERO,
+                    DEFAULT_REVERSE_ANGLE);
+    Servo_SetLimits((ServoHandle_t)pServo, DEFAULT_USECS_MIN, DEFAULT_USECS_MAX);
+    Servo_SetMotionParameters((ServoHandle_t)pServo, DEFAULT_RATE);
     
     /* enable the timer peripheral
      */
@@ -802,7 +808,7 @@ ServoConfig(uint32_t timerIdx, uint32_t timerHalf)
 
     /* return the handle to the caller
      */
-    DbgPrintf("-ServoConfig(), ret handle 0x%08X\n", pServo);
+    DbgPrintf("-Servo_Config(), ret handle 0x%08X\n", pServo);
     return((ServoHandle_t)pServo);
 }
 
@@ -819,7 +825,7 @@ ServoConfig(uint32_t timerIdx, uint32_t timerHalf)
  *          input parameter is bad (-1)
  */
 int
-ServoEnable(ServoHandle_t hServo)
+Servo_Enable(ServoHandle_t hServo)
 {
     Servo_t *pServo = (Servo_t *)hServo;
     
@@ -830,7 +836,7 @@ ServoEnable(ServoHandle_t hServo)
         return(-1);
     }
     
-    return(ServoSetPositionUsecs(hServo, pServo->currentUsecs));
+    return(Servo_SetPositionUsecs(hServo, pServo->currentUsecs));
 }
 
 /**
@@ -845,12 +851,12 @@ ServoEnable(ServoHandle_t hServo)
  *          input parameter is bad (-1); timer not initialized (-2)
  */
 int
-ServoDisable(ServoHandle_t hServo)
+Servo_Disable(ServoHandle_t hServo)
 {
     Servo_t *pServo;
     const Timer_t *pTimer;
     
-    DbgPrintf("+ServoDisable(hServo=0x%08X)\n", hServo);
+    DbgPrintf("+Servo_Disable(hServo=0x%08X)\n", hServo);
     
     /* validate inputs
      */
@@ -885,7 +891,7 @@ ServoDisable(ServoHandle_t hServo)
     ROM_TimerMatchSet(pTimer->timerBase, pTimer->timerHalf,
                       gTimerPeriodUsecs * gCyclesPerUsec);
     
-    DbgPrintf("-ServoDisable(), ret(0)\n", 0);
+    DbgPrintf("-Servo_Disable(), ret(0)\n", 0);
     return(0);
 }
 
@@ -908,7 +914,7 @@ ServoDisable(ServoHandle_t hServo)
  * Reasons for error are: bad input parameter (-1).
  */
 int
-ServoCalibrate(ServoHandle_t hServo, int32_t usecsPer90, int32_t usecsAtZero,
+Servo_Calibrate(ServoHandle_t hServo, int32_t usecsPer90, int32_t usecsAtZero,
                bool reverseAngle)
 {
     Servo_t *pServo = (Servo_t *)hServo;
@@ -945,7 +951,7 @@ ServoCalibrate(ServoHandle_t hServo, int32_t usecsPer90, int32_t usecsAtZero,
  * Reasons for error are: bad input parameter (-1).
  */
 int
-ServoSetLimits(ServoHandle_t hServo, int32_t usecsMin, int32_t usecsMax)
+Servo_SetLimits(ServoHandle_t hServo, int32_t usecsMin, int32_t usecsMax)
 {
     Servo_t *pServo = (Servo_t *)hServo;
     
@@ -979,12 +985,12 @@ ServoSetLimits(ServoHandle_t hServo, int32_t usecsMin, int32_t usecsMax)
  *          bad input parameter (-1)
  */
 int
-ServoSetMotionParameters(ServoHandle_t hServo, int32_t rateDegPerSec)
+Servo_SetMotionParameters(ServoHandle_t hServo, int32_t rateDegPerSec)
 {
     int32_t usecs;
     Servo_t *pServo = (Servo_t *)hServo;
     
-    DbgPrintf("+ServoSetMotionParameters(hServo=0x%08X, rateDegPerSec=%d\n",
+    DbgPrintf("+Servo_SetMotionParameters(hServo=0x%08X, rateDegPerSec=%d\n",
               hServo, rateDegPerSec);
     
     /* validate input handle
@@ -1013,7 +1019,7 @@ ServoSetMotionParameters(ServoHandle_t hServo, int32_t rateDegPerSec)
      */
     pServo->rateUsecsPerTick = usecs;
     
-    DbgPrintf("-ServoSetMotionParameters(), ret(0)\n", 0);
+    DbgPrintf("-Servo_SetMotionParameters(), ret(0)\n", 0);
     return(0);
 }
 
@@ -1032,12 +1038,12 @@ ServoSetMotionParameters(ServoHandle_t hServo, int32_t rateDegPerSec)
  *               input parameter is bad (-1); timer not initialized (-2)
  */
 int
-ServoSetPositionUsecs(ServoHandle_t hServo, int32_t usecs)
+Servo_SetPositionUsecs(ServoHandle_t hServo, int32_t usecs)
 {
     Servo_t *pServo;
     const Timer_t *pTimer;
     
-    DbgPrintf("+ServoSetPositionUsecs(hServo=0x%08X, usecs=%d)\n", hServo, usecs);
+    DbgPrintf("+Servo_SetPositionUsecs(hServo=0x%08X, usecs=%d)\n", hServo, usecs);
     
     /* validate input handle
      */
@@ -1072,7 +1078,7 @@ ServoSetPositionUsecs(ServoHandle_t hServo, int32_t usecs)
     ROM_TimerMatchSet(pTimer->timerBase, pTimer->timerHalf,
                       (gTimerPeriodUsecs - usecs) * gCyclesPerUsec);
     
-    DbgPrintf("-ServoSetPositionUsecs(), ret (0)\n", 0);
+    DbgPrintf("-Servo_SetPositionUsecs(), ret (0)\n", 0);
     return(0);
 }
 
@@ -1089,12 +1095,12 @@ ServoSetPositionUsecs(ServoHandle_t hServo, int32_t usecs)
  *               input parameter is bad (-1); timer not initialized (-2)
  */
 int
-ServoSetPosition(ServoHandle_t hServo, int32_t centiDegrees)
+Servo_SetPosition(ServoHandle_t hServo, int32_t centiDegrees)
 {
     int32_t usecs;
     int ret;
     
-    DbgPrintf("+ServoSetPosition(hServo=0x%08X, centiDegrees=%d)\n", hServo,
+    DbgPrintf("+Servo_SetPosition(hServo=0x%08X, centiDegrees=%d)\n", hServo,
               centiDegrees);
     
     /* validate input handle
@@ -1111,9 +1117,9 @@ ServoSetPosition(ServoHandle_t hServo, int32_t centiDegrees)
     
     /* set the new position
      */
-    ret = ServoSetPositionUsecs(hServo, usecs);
+    ret = Servo_SetPositionUsecs(hServo, usecs);
     
-    DbgPrintf("-ServoSetPosition(), ret (%d)\n", ret);
+    DbgPrintf("-Servo_SetPosition(), ret (%d)\n", ret);
     return(ret);
 }
 
@@ -1128,11 +1134,11 @@ ServoSetPosition(ServoHandle_t hServo, int32_t centiDegrees)
  * @returns The pulse with in microseconds or 0 if there is an error.
  */
 int32_t
-ServoGetPositionUsecs(ServoHandle_t hServo)
+Servo_GetPositionUsecs(ServoHandle_t hServo)
 {
     Servo_t *pServo;
     
-    DbgPrintf("+ServoGetPositionUsecs(hServo=0x%08X)\n", hServo);
+    DbgPrintf("+Servo_GetPositionUsecs(hServo=0x%08X)\n", hServo);
     
     /* validate input handle
      */
@@ -1146,7 +1152,7 @@ ServoGetPositionUsecs(ServoHandle_t hServo)
      */
     pServo = (Servo_t *)hServo;
 
-    DbgPrintf("-ServoGetPositionUsecs(), ret (%d)\n", pServo->currentUsecs);
+    DbgPrintf("-Servo_GetPositionUsecs(), ret (%d)\n", pServo->currentUsecs);
     return(pServo->currentUsecs);
 }
 
@@ -1163,12 +1169,12 @@ ServoGetPositionUsecs(ServoHandle_t hServo)
  *          a legitimate value for the angle.
  */
 int32_t
-ServoGetPosition(ServoHandle_t hServo)
+Servo_GetPosition(ServoHandle_t hServo)
 {
     Servo_t *pServo;
     int32_t cdeg;
     
-    DbgPrintf("+ServoGetPosition(hServo=0x%08X)\n", hServo);
+    DbgPrintf("+Servo_GetPosition(hServo=0x%08X)\n", hServo);
     
     /* validate input handle
      */
@@ -1186,7 +1192,7 @@ ServoGetPosition(ServoHandle_t hServo)
      */
     cdeg = CalcCentiDegreesFromUsecsAbs(hServo, pServo->currentUsecs);
     
-    DbgPrintf("-ServoGetPosition(), ret (%d)\n", cdeg);
+    DbgPrintf("-Servo_GetPosition(), ret (%d)\n", cdeg);
     return(cdeg);
 }
 
@@ -1214,17 +1220,17 @@ ServoGetPosition(ServoHandle_t hServo)
  *
  * @returns Zero is returned if successful, non-zero for the following reasons:
  *          servo handle is bad (-1); or any error returned by
- *          ServoSetTickObserver().
+ *          Servo_SetTickObserver().
  */
 int
-ServoMoveUsecs(ServoHandle_t hServo, int32_t usecs,
-               void (*pfnMotionObserver)(void *pObserverData),
-               void *pObserverData)
+Servo_MoveUsecs(ServoHandle_t hServo, int32_t usecs,
+                void (*pfnMotionObserver)(void *pObserverData),
+                void *pObserverData)
 {
     int ret;
     Servo_t *pServo = (Servo_t *)hServo;
     
-    DbgPrintf("+ServoMoveUsecs(hServo=0x%08X, usecs=%d, pfnObserver=0x%08X, pData=0x%08X\n",
+    DbgPrintf("+Servo_MoveUsecs(hServo=0x%08X, usecs=%d, pfnObserver=0x%08X, pData=0x%08X\n",
               hServo, usecs, pfnMotionObserver, pObserverData);
     
     /* validate input handle
@@ -1238,7 +1244,7 @@ ServoMoveUsecs(ServoHandle_t hServo, int32_t usecs,
     /* Stop any ongoing motion, or any other notification and interrupts
      * for the timer
      */
-    ret = ServoSetTickObserver(hServo, NULL, NULL);
+    ret = Servo_SetTickObserver(hServo, NULL, NULL);
     if(ret)
     {
         return(ret);
@@ -1262,9 +1268,9 @@ ServoMoveUsecs(ServoHandle_t hServo, int32_t usecs,
     
     /* enable the motion handler, this will start the servo motion
      */
-    ret = ServoSetTickObserver(hServo, ServoMotionHandler, pServo);
+    ret = Servo_SetTickObserver(hServo, Servo_MotionHandler, pServo);
     
-    DbgPrintf("-ServoMoveUsecs(), ret (%d)\n", ret);
+    DbgPrintf("-Servo_MoveUsecs(), ret (%d)\n", ret);
     return(ret);
 }
 
@@ -1292,18 +1298,18 @@ ServoMoveUsecs(ServoHandle_t hServo, int32_t usecs,
  *
  * @returns Zero is returned if successful, non-zero for the following reasons:
  *          servo handle is bad (-1); or any error returned by
- *          ServoSetTickObserver().
+ *          Servo_SetTickObserver().
  */
 int
-ServoMove(ServoHandle_t hServo, int32_t centiDegrees,
-          void (*pfnMotionObserver)(void *pObserverData),
-          void *pObserverData)
+Servo_Move(ServoHandle_t hServo, int32_t centiDegrees,
+           void (*pfnMotionObserver)(void *pObserverData),
+           void *pObserverData)
 {
     int ret;
     int usecs;
     Servo_t *pServo = (Servo_t *)hServo;
     
-    DbgPrintf("+ServoMove(hServo=0x%08X, centiDegrees=%d, pfnObserver=0x%08X, pData=0x%08X\n",
+    DbgPrintf("+Servo_Move(hServo=0x%08X, centiDegrees=%d, pfnObserver=0x%08X, pData=0x%08X\n",
               hServo, centiDegrees, pfnMotionObserver, pObserverData);
     
     /* validate input handle
@@ -1320,9 +1326,9 @@ ServoMove(ServoHandle_t hServo, int32_t centiDegrees,
     
     /* call the move function
      */
-    ret = ServoMoveUsecs(hServo, usecs, pfnMotionObserver, pObserverData);
+    ret = Servo_MoveUsecs(hServo, usecs, pfnMotionObserver, pObserverData);
     
-    DbgPrintf("-ServoMove(), ret (%d)\n", ret);
+    DbgPrintf("-Servo_Move(), ret (%d)\n", ret);
     return(ret);
 }
 
@@ -1346,14 +1352,14 @@ ServoMove(ServoHandle_t hServo, int32_t centiDegrees,
  *          bad handle (-1); timer not initialized (-2)
  */
 int
-ServoSetTickObserver(ServoHandle_t hServo,
-                     void (*pfnServoTickObserver)(void *pObserverData),
-                     void *pObserverData)
+Servo_SetTickObserver(ServoHandle_t hServo,
+                      void (*pfnServoTickObserver)(void *pObserverData),
+                      void *pObserverData)
 {
     Servo_t *pServo;
     const Timer_t *pTimer;
     
-    DbgPrintf("+ServoSetTickObserver(hServo=0x%08X, pfnObserver=0x%08X, pData=0x%08X\n",
+    DbgPrintf("+Servo_SetTickObserver(hServo=0x%08X, pfnObserver=0x%08X, pData=0x%08X\n",
               hServo, pfnServoTickObserver, pObserverData);
     
     /* validate input handle
@@ -1397,9 +1403,19 @@ ServoSetTickObserver(ServoHandle_t hServo,
         pServo->pfnTickObserver = NULL;
     }
     
-    DbgPrintf("-ServoSetTickObserver(), ret (0)\n", 0);
+    DbgPrintf("-Servo_SetTickObserver(), ret (0)\n", 0);
     return(0);
 }
+
+/**
+ * @}
+ */
+
+/******************************************************************************
+ *
+ * Timer interrupt handlers
+ *
+ *****************************************************************************/
 
 /* @internal
  *
@@ -1424,7 +1440,3 @@ WTMR_HANDLER(4, A)
 WTMR_HANDLER(4, B)
 WTMR_HANDLER(5, A)
 WTMR_HANDLER(5, B)
-
-/**
- * @}
- */
