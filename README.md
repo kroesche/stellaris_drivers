@@ -1,7 +1,7 @@
 Summary
 =======
 
-Miscellaneous drivers for TI Stellaris microcontrollers
+Miscellaneous drivers for TI Stellaris&reg; microcontrollers
 ======================================================
 by Joe Kroesche (kroesche.org)
 
@@ -9,10 +9,12 @@ by Joe Kroesche (kroesche.org)
 
 License
 -------
-Copyright (c) 2013, Joseph Kroesche (kroesche.org).  All rights reserved.
+Copyright &copy; 2013, Joseph Kroesche (kroesche.org).  All rights reserved.
 This software is released under the FreeBSD license, found in the accompanying file LICENSE.txt and at the following URL:
   http://www.freebsd.org/copyright/freebsd-license.html
 This software is provided as-is and without warranty.
+
+**The author and this software is not affiliated with Texas Instruments.  This is not a product of Texas Instruments, and TI is not responsible for this software.  Please do not ask TI for support with this software.  The Stellaris trademark is owned by TI.**
 
 Drivers
 =======
@@ -24,5 +26,5 @@ This is a driver for the Philips PCD8544 display controller, which is used in th
 
 servo-wt
 --------
-This is a driver that uses Stellaris LM4F wide timers as servo controllers.  Up to 12 servos are supported.
+This is a driver that uses Stellaris LM4F wide timers as servo controllers.  Up to 12 servos are supported.  See [servo-wt module](@ref servo_wt_driver) documentation.
 
