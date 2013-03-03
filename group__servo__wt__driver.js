@@ -15,5 +15,8 @@ var group__servo__wt__driver =
     [ "Servo_GetPosition", "group__servo__wt__driver.html#gafad928b5afbe85e18e21c97215e13b69", null ],
     [ "Servo_MoveUsecs", "group__servo__wt__driver.html#gaaf629ce9f374998e209758e4d95b0f73", null ],
     [ "Servo_Move", "group__servo__wt__driver.html#ga4f4c89047aaa2868d34cae37372b9fee", null ],
-    [ "Servo_SetTickObserver", "group__servo__wt__driver.html#ga270ba8a4fcb9b48b9e98b232b48882f4", null ]
+    [ "Servo_SetTickObserver", "group__servo__wt__driver.html#ga270ba8a4fcb9b48b9e98b232b48882f4", null ],
+    [ "Servo_ReadBatteryRaw", "group__servo__wt__driver.html#ga1616e6251571b87f9f63ff105f412bbd", null ],
+    [ "Servo_ReadBatteryMv", "group__servo__wt__driver.html#ga0f66278adbbf156b01c9f0d2fa4e3bb9", null ],
+    [ "Servo_BatteryInit", "group__servo__wt__driver.html#ga3d51d0b1933979a9b38c08e839b5ca92", null ]
 ];

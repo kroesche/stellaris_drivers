@@ -116,10 +116,20 @@ Functions</h2></td></tr>
 <tr class="memitem:ga270ba8a4fcb9b48b9e98b232b48882f4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__servo__wt__driver.html#ga270ba8a4fcb9b48b9e98b232b48882f4">Servo_SetTickObserver</a> (ServoHandle_t hServo, void(*pfnServoTickObserver)(void *pObserverData), void *pObserverData)</td></tr>
 <tr class="memdesc:ga270ba8a4fcb9b48b9e98b232b48882f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set a callback function on the PWM timer tick.  <a href="#ga270ba8a4fcb9b48b9e98b232b48882f4">More...</a><br/></td></tr>
 <tr class="separator:ga270ba8a4fcb9b48b9e98b232b48882f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1616e6251571b87f9f63ff105f412bbd"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__servo__wt__driver.html#ga1616e6251571b87f9f63ff105f412bbd">Servo_ReadBatteryRaw</a> (void)</td></tr>
+<tr class="memdesc:ga1616e6251571b87f9f63ff105f412bbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the battery level in raw ADC counts.  <a href="#ga1616e6251571b87f9f63ff105f412bbd">More...</a><br/></td></tr>
+<tr class="separator:ga1616e6251571b87f9f63ff105f412bbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0f66278adbbf156b01c9f0d2fa4e3bb9"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__servo__wt__driver.html#ga0f66278adbbf156b01c9f0d2fa4e3bb9">Servo_ReadBatteryMv</a> (void)</td></tr>
+<tr class="memdesc:ga0f66278adbbf156b01c9f0d2fa4e3bb9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Read the battery level in millivolts.  <a href="#ga0f66278adbbf156b01c9f0d2fa4e3bb9">More...</a><br/></td></tr>
+<tr class="separator:ga0f66278adbbf156b01c9f0d2fa4e3bb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga3d51d0b1933979a9b38c08e839b5ca92"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__servo__wt__driver.html#ga3d51d0b1933979a9b38c08e839b5ca92">Servo_BatteryInit</a> (uint32_t gain, uint32_t offset)</td></tr>
+<tr class="memdesc:ga3d51d0b1933979a9b38c08e839b5ca92"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the servo battery monitor.  <a href="#ga3d51d0b1933979a9b38c08e839b5ca92">More...</a><br/></td></tr>
+<tr class="separator:ga3d51d0b1933979a9b38c08e839b5ca92"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>This is a servo driver for TI Stellaris microcontrollers. </p>
 <p>Specifically it is for the LM4F parts (such as LM4F120 or LM4F232) because this driver depends on the wide timers. The wide timers are not available on older LM3S devices.</p>
+<p>Although it is not required, this driver was written to be used with a Servo BoosterPack. See <a href="https://github.com/kroesche/lp-servo12">https://github.com/kroesche/lp-servo12</a> and <a href="http://tronics.kroesche.org/servo-boosterpack.html">http://tronics.kroesche.org/servo-boosterpack.html</a></p>
 <p>This driver provides a set of functions for configuring and using timers for servo motion control. It uses the PWM mode of the timers to generate the appropriate pulse-width control for typical hobby servos.</p>
 <p>Two unit systems are provided for dealing with servo position: microseconds and centi-degrees. Because the servo position is controlled by the pulse width of the timer output signal, the position can be represented as a pulse width. Therefore microseconds is used as the units to represent the pulse width and thus the servo position. The other option for units is centi-degrees, which is degrees * 10. This allows resolution of 0.1 degrees which should be sufficient for hobby applications. Using centi-degrees allows fractional degree resolution without requiring floating point.</p>
 <p>Servos can be moved two ways: direct position and motion control. When direct position is used, the servo is just immediately commanded to the new position and the rate of motion is whatever the servo provides. When motion control is used, the rate of motion is controlled. This allows for smoother and less jerky control.</p>
@@ -676,12 +686,101 @@ err = Servo_Move(handle, 450, NULL, NULL);</pre><h2 class="groupheader">Function
 
 </div>
 </div>
+<a class="anchor" id="ga1616e6251571b87f9f63ff105f412bbd"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t Servo_ReadBatteryRaw </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Read the battery level in raw ADC counts. </p>
+<p>This function returns the battery voltage as raw ADC counts (0-4095). It uses a moving average to smooth the voltage reading so the reading should be fairly smooth but will not respond to quick changes in battery voltage. This function should be called periodically in order to keep the moving average accurate. It should be used for the purpose of monitoring the battery state of charge and not for reading instantaneous voltage.</p>
+<dl class="section note"><dt>Note</dt><dd><ol type="1">
+<li>This function will start an ADC conversion and then poll-wait until the conversion is complete. This should only take a microsecond or two.</li>
+<li>This function assumes it is being used on a 12-servo BoosterPack board which has the battery voltage input on AIN2. If you are not using the Servo BoosterPack board, then you probably should not use this function.</li>
+<li>The ADC input will read bogus non-saturated values if the input goes above the reference voltage. The battery measuring circuit is designed for a battery voltage range of 6-9V. If you battery is above 9V you may read a non-saturated value on the ADC that is incorrect.</li>
+</ol>
+</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The raw ADC counts of the battery voltage. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga0f66278adbbf156b01c9f0d2fa4e3bb9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t Servo_ReadBatteryMv </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Read the battery level in millivolts. </p>
+<p>This function returns the battery voltage in millivolts. It uses Servo_ReadBatteryRaw to get the smoothed ADC counts and then applies a conversion to obtain millivolts.</p>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__servo__wt__driver.html#ga1616e6251571b87f9f63ff105f412bbd" title="Read the battery level in raw ADC counts.">Servo_ReadBatteryRaw</a></dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The battery voltage in millivolts. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga3d51d0b1933979a9b38c08e839b5ca92"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Servo_BatteryInit </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>gain</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>offset</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Initialize the servo battery monitor. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">gain</td><td>is the range of measurement, in millivolts </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">offset</td><td>is the lowest measured voltage, in millivolts</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>This function will initialize the ADC peripheral to prepare for measuring the battery voltage using Servo_BatteryReadMv. The parameters <em>gain</em> and <em>offset</em> can be used to calibrate the measurement. If these values are zero, then nominal calibration values are used so they can be left at 0 if calibration data is not available. The calibration values are not arbitrary - they must match the tuning of the battery measuring circuit.</p>
+<ul>
+<li>gain - this is the voltage range that is measurable by the monitor circuit, in millivolts. The circuit is designed for a nominal range of 6-9.3V so the range is 3300 mV.</li>
+<li>offset - this is the offset point of the lowest measurable voltage. The circuit is designed for 6V so the nominal setting is 6000 mV. <dl class="section note"><dt>Note</dt><dd>The servo battery monitoring functions are meant to be used with the Servo BoosterPack board which has a battery monitor circuit and uses AIN2 for the battery voltage.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__servo__wt__driver.html#ga0f66278adbbf156b01c9f0d2fa4e3bb9" title="Read the battery level in millivolts.">Servo_ReadBatteryMv</a> </dd></dl>
+</li>
+</ul>
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sat Mar 2 2013 16:41:59 for Stellaris Drivers by
+    <li class="footer">Generated on Sat Mar 2 2013 21:38:04 for Stellaris Drivers by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.3.1 </li>
   </ul>

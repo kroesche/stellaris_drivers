@@ -112,14 +112,18 @@ $(document).ready(function(){initNavTree('servo-wt_8h_source.html','');});
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;                      <span class="keywordtype">void</span> *pObserverData);</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">int</span> <a class="code" href="group__servo__wt__driver.html#ga7b410f7eb9a7e960c8b8cd11761e6592" title="Set servo motion parameters.">Servo_SetMotionParameters</a>(ServoHandle_t hServo, int32_t rateDegPerSec);</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="keyword">extern</span> <span class="keywordtype">void</span> <a class="code" href="group__servo__wt__driver.html#ga3d51d0b1933979a9b38c08e839b5ca92" title="Initialize the servo battery monitor.">Servo_BatteryInit</a>(uint32_t gain, uint32_t offset);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">extern</span> uint32_t <a class="code" href="group__servo__wt__driver.html#ga0f66278adbbf156b01c9f0d2fa4e3bb9" title="Read the battery level in millivolts.">Servo_ReadBatteryMv</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">extern</span> uint32_t <a class="code" href="group__servo__wt__driver.html#ga1616e6251571b87f9f63ff105f412bbd" title="Read the battery level in raw ADC counts.">Servo_ReadBatteryRaw</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="preprocessor">#endif</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>servo-wt.h</b></li>
-    <li class="footer">Generated on Sat Mar 2 2013 16:41:59 for Stellaris Drivers by
+    <li class="footer">Generated on Sat Mar 2 2013 21:38:04 for Stellaris Drivers by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.3.1 </li>
   </ul>
