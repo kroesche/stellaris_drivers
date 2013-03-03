@@ -30,5 +30,5 @@ This is a driver for the Philips PCD8544 display controller, which is used in th
 
 servo-wt (Servo Driver for Wide Timers)
 --------
-This is a driver that uses Stellaris LM4F wide timers as servo controllers.  Up to 12 servos are supported.
+This is a driver that uses Stellaris LM4F wide timers as servo controllers.  Up to 12 servos are supported.  Though not required, this driver was written to be used with the [12-servo BoosterPack](http://tronics.kroesche.org/servo-boosterpack.html).  See also https://github.com/kroesche/lp-servo12
 

@@ -27,6 +27,7 @@
 #include "inc/hw_timer.h"
 #include "inc/hw_gpio.h"
 
+#include "driverlib/adc.h"
 #include "driverlib/debug.h"
 #include "driverlib/timer.h"
 #include "driverlib/sysctl.h"
@@ -45,6 +46,10 @@
  * it is for the LM4F parts (such as LM4F120 or LM4F232) because this driver
  * depends on the wide timers.  The wide timers are not available on older
  * LM3S devices.
+ *
+ * Although it is not required, this driver was written to be used with
+ * a Servo BoosterPack.  See https://github.com/kroesche/lp-servo12 and
+ * http://tronics.kroesche.org/servo-boosterpack.html
  *
  * This driver provides a set of functions for configuring and using timers
  * for servo motion control.  It uses the PWM mode of the timers to generate
@@ -154,6 +159,13 @@
  */
 static int32_t gCyclesPerUsec;
 static int32_t gTimerPeriodUsecs;
+
+/* Store calibration values for the battery monitor circuit.  These are
+ * initialized to nominal default values, and can be changed using
+ * Servo_BatteryInit()
+ */
+static uint32_t gBatteryGain = 3300;
+static uint32_t gBatteryOffset = 6000;
 
 /******************************************************************************
  *
@@ -1405,6 +1417,141 @@ Servo_SetTickObserver(ServoHandle_t hServo,
     
     DbgPrintf("-Servo_SetTickObserver(), ret (0)\n", 0);
     return(0);
+}
+
+/**
+ * Read the battery level in raw ADC counts.
+ *
+ * This function returns the battery voltage as raw ADC counts (0-4095). It
+ * uses a moving average to smooth the voltage reading so the reading should
+ * be fairly smooth but will not respond to quick changes in battery
+ * voltage.  This function should be called periodically in order to keep
+ * the moving average accurate.  It should be used for the purpose of
+ * monitoring the battery state of charge and not for reading instantaneous
+ * voltage.
+ *
+ * @note
+ * 1. This function will start an ADC conversion and then poll-wait until the
+ * conversion is complete.  This should only take a microsecond or two.
+ * 2. This function assumes it is being used on a 12-servo BoosterPack board
+ * which has the battery voltage input on AIN2.  If you are not using the
+ * Servo BoosterPack board, then you probably should not use this function.
+ * 3. The ADC input will read bogus non-saturated values if the input goes above
+ * the reference voltage.  The battery measuring circuit is designed for a
+ * battery voltage range of 6-9V.  If you battery is above 9V you may read
+ * a non-saturated value on the ADC that is incorrect.
+ *
+ * @returns The raw ADC counts of the battery voltage.
+ */
+uint32_t
+Servo_ReadBatteryRaw(void)
+{
+    uint32_t samples[1];
+    static uint32_t avg = 0;
+    
+    /* Start the ADC conversion and wait for it to complete
+     */
+    ADCProcessorTrigger(ADC0_BASE, 3);
+    while(!ADCIntStatus(ADC0_BASE, 3, false))
+    {}
+    ADCIntClear(ADC0_BASE, 3);
+    
+    /* Read the value from the ADC
+     */
+    ADCSequenceDataGet(ADC0_BASE, 3, &samples[0]);
+
+    /* Apply the moving average and return to caller
+     */
+    if(avg == 0)
+    {
+        avg = samples[0];
+    }
+    else
+    {
+        avg = ((avg * 9) / 10) + (samples[0] / 10);
+    }
+    
+    return(avg);
+}
+
+/**
+ * Read the battery level in millivolts.
+ *
+ * This function returns the battery voltage in millivolts.  It uses
+ * Servo_ReadBatteryRaw to get the smoothed ADC counts and then applies a
+ * conversion to obtain millivolts.
+ *
+ * @see Servo_ReadBatteryRaw
+ *
+ * @returns The battery voltage in millivolts.
+ */
+uint32_t
+Servo_ReadBatteryMv(void)
+{
+    /* Get the ADC value of thebattery voltage
+     */
+    uint32_t raw = Servo_ReadBatteryRaw();
+    
+    /* Perform the calc to obtain millivolts and return to caller
+     */
+    raw *= gBatteryGain;
+    raw /= 4095;
+    raw += gBatteryOffset;
+    
+    return(raw);
+}
+
+/**
+ * Initialize the servo battery monitor
+ *
+ * @param[in] gain is the range of measurement, in millivolts
+ * @param[in] offset is the lowest measured voltage, in millivolts
+ *
+ * This function will initialize the ADC peripheral to prepare for measuring
+ * the battery voltage using Servo_BatteryReadMv.  The parameters *gain* and
+ * *offset* can be used to calibrate the measurement.  If these values are
+ * zero, then nominal calibration values are used so they can be left at 0
+ * if calibration data is not available.  The calibration values are not
+ * arbitrary - they must match the tuning of the battery measuring circuit.
+ *
+ * - gain -   this is the voltage range that is measurable by the monitor
+ *            circuit, in millivolts.  The circuit is designed for a nominal
+ *            range of 6-9.3V so the range is 3300 mV.
+ * - offset - this is the offset point of the lowest measurable voltage.  The
+ *            circuit is designed for 6V so the nominal setting is 6000 mV.
+ * @note
+ * The servo battery monitoring functions are meant to be used with the
+ * Servo BoosterPack board which has a battery monitor circuit and uses AIN2
+ * for the battery voltage.
+ *
+ * @see Servo_ReadBatteryMv
+ *
+ */
+void
+Servo_BatteryInit(uint32_t gain, uint32_t offset)
+{
+    /* if calibration values are provided then store them
+     */
+    if(gain)
+    {
+        gBatteryGain = gain;
+    }
+    if(offset)
+    {
+        gBatteryOffset = offset;
+    }
+    
+    /* Enable the ADC peripheral and GPIO port and pin for input
+     */
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+    GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_1);
+    
+    /* Configure sequencer 3 for one-shot processor triggered acquisition
+     */
+    ADCSequenceConfigure(ADC0_BASE, 3, ADC_TRIGGER_PROCESSOR, 0);
+    ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH2 | ADC_CTL_END | ADC_CTL_IE);
+    ADCSequenceEnable(ADC0_BASE, 3);
 }
 
 /**

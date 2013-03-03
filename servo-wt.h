@@ -70,4 +70,8 @@ extern int Servo_Move(ServoHandle_t hServo, int32_t centiDegrees,
                       void *pObserverData);
 extern int Servo_SetMotionParameters(ServoHandle_t hServo, int32_t rateDegPerSec);
 
+extern void Servo_BatteryInit(uint32_t gain, uint32_t offset);
+extern uint32_t Servo_ReadBatteryMv(void);
+extern uint32_t Servo_ReadBatteryRaw(void);
+
 #endif
