@@ -63,7 +63,7 @@
  *    uint8_t frameBuffer[LPD8806_LEDSTRIP_FRAMEBUF_SIZE(NUM_PIXELS)];
  *
  *    // init the driver for SPI 0, and 500 kHz clock rate
- *    LPD8806_Handle_t hLed = LPD8806_LedStrip_Init(SysCtlClockGet(), 0, 500000);
+ *    LPD8806_LedStrip_Handle_t hLed = LPD8806_LedStrip_Init(SysCtlClockGet(), 0, 500000);
  *    if(!hLed)
  *    {
  *        // handle error
